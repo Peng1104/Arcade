@@ -1,0 +1,6 @@
+main: ${project.groupId}.${project.artifactId}
+name: ${project.name}
+author: Peng1104
+version: ${project.version}
+depend: [PengAPI]
+api-version: 1.13
