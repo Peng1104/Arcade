@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import net.peng1104.Arcade;
 import net.peng1104.annotation.Default;
@@ -17,8 +18,18 @@ import net.peng1104.game.games.Game;
 import net.peng1104.game.maps.GameMap;
 import net.peng1104.profiles.Profile;
 import net.peng1104.special.TimedThread;
+import net.peng1104.storage.Storage;
+import net.peng1104.storage.enums.main.ArcadeConfig;
 import net.peng1104.storage.game.enums.GameType;
 import net.peng1104.storage.game.enums.RoomState;
+
+/**
+ * {@link Class} to create and manage a {@link Room}
+ * 
+ * @since 1.0.0
+ * 
+ * @author Peng1104
+ */
 
 public class Room {
 	
@@ -30,6 +41,30 @@ public class Room {
 	 */
 	
 	private static final Random RANDOM = new Random();
+	
+	/**
+	 * The {@link Pattern} to check if a password {@link String} contains only
+	 * digits 
+	 * 
+	 * @since 1.0.0 
+	 */
+	
+	private static final Pattern PATTERN = Pattern.compile("\\D");
+	
+	/**
+	 * {@link Method} to check if a {@link String} is a valid password
+	 * 
+	 * @param password The {@link String} to check
+	 * 
+	 * @return True if the given {@link String} is a valid password {@link String}
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Default(Boolean = false)
+	public static boolean isValidPassword(@NotNull String password) {
+		return password != null && !PATTERN.matcher(password).find();
+	}
 	
 	/**
 	 * The owner of this {@link Room} if private
@@ -251,6 +286,102 @@ public class Room {
 		return id;
 	}
 	
+	public void setGameType(GameType gameType) {
+		//TODO fazer mudança de gameType 
+		
+		this.gameType = gameType;
+	}
+	
+	/**
+	 * Get the {@link GameType} that will or is been played in this {@link Room}
+	 * 
+	 * @return The {@link GameType} that will or is been played in this
+	 * {@link Room}
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Default(value = GameType.class)
+	public GameType getGameType() {
+		return gameType;
+	}
+	
+	/**
+	 * Get if this {@link Room} is a private {@link Room}
+	 * 
+	 * @return True if this {@link Room} has no owner, false otherwise
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Default(Boolean = false)
+	public boolean isPrivate() {
+		return owner != null;
+	}
+	
+	/**
+	 * Get the owner of this {@link Room} if it {@link #isPrivate()}
+	 * 
+	 * @return The {@link UUID} of the {@link Profile} that owns this
+	 * {@link Room}, null otherwise
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Nullable
+	public UUID getOwner() {
+		return owner;
+	}
+	
+	/**
+	 * Get the {@link Profile} that owns this {@link Room} if this {@link Room}
+	 * {@link #isPrivate()}
+	 * 
+	 * @return The {@link Profile} that owns this {@link Room} if this
+	 * {@link Room} {@link #isPrivate()}, null otherwise
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Nullable
+	public Profile getOwnerProfile() {
+		return Arcade.getProfileManager().getProfile(owner); 
+	}
+	
+	/**
+	 * {@link Method} to set the password of this {@link Room}
+	 * 
+	 * @param password The password to be set
+	 * 
+	 * @return True if the password of this {@link Room} has changed, false
+	 * otherwise
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Default(Boolean = false)
+	public boolean setPassword(@NotNull String password) {
+		if (password != null && !this.password.equals(password)) {
+			this.password = password;
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Get the password of this {@link Room}, return a empty {@link String} if
+	 * this {@link Room} has not a password
+	 * 
+	 * @return The password of this {@link Room} if set, empty else
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Default(string = "")
+	public String getPassword() {
+		return password;
+	}
+	
 	/**
 	 * {@link Method} to set the time of this {@link Room}
 	 * 
@@ -259,39 +390,39 @@ public class Room {
 	 * @since 1.0.0
 	 */
 	
-	public void setRoomTimer(int time) {
-		if (time > 10 && (state == RoomState.WAITING || state == RoomState.VOTING)) {
-			if (state == RoomState.WAITING) {
-				if (isPrivate()) {
-					if (roomThread != null) {
-						roomThread.cancel();
-						roomThread = null;
-					}
-					deleteThread = new TimedThread(time) {
-						
-						@Override
-						public void onLoop() {
-							
-							
-							//TODO fazer sistema de alerta que a sala será apagata em x tempo
-							
-							if (getCount() == 120) {
-								//Aviso 2 minutos para
-							}
-							if (getCount() == 60) {
-								//Aviso 1 minuto va
-							}
-						}
-						
-						@Override
-						public void execute() {
-							//TODO apagar sala
-						}
-					};
-					deleteThread.start();
+	public void setRoomTimer(long time) {
+		if (time > 10) {
+			if (state == RoomState.STARTING) {
+				
+				//TODO Voltar a faze pre start
+				
+				if (playersSet.size() > getMinPlayersAmount()) {
+					state = RoomState.VOTING;
+				}
+				else {
+					state = RoomState.WAITING;
 				}
 			}
-			else {
+			if (state == RoomState.WAITING && isPrivate()) {
+				if (roomThread != null) {
+					roomThread.cancel();
+					roomThread = null;
+				}
+				deleteThread = new TimedThread(Storage.getLong(ArcadeConfig.PRIVATE_ROOM_DELETE_TIME)) {
+					
+					@Override
+					public void onLoop() {
+						brocastMessage(true, Arcade.getInstance().getConfiguration().getDeleteMessages().get(getCount()));
+					}
+					
+					@Override
+					public void execute() {
+						//TODO Apagar a sala
+					}
+				};
+				deleteThread.start();
+			}
+			if (state == RoomState.VOTING) {
 				if (deleteThread != null) {
 					deleteThread.cancel();
 					deleteThread = null;
@@ -300,7 +431,7 @@ public class Room {
 					
 					@Override
 					public void onLoop() {
-						//TODO fazer loop
+						//TODO fazer loop (avisos de startGame)
 					}
 					
 					@Override
@@ -346,16 +477,16 @@ public class Room {
 	}
 	
 	/**
-	 * Get if this {@link Room} is a private {@link Room}
+	 * Get if this {@link Room} timer is paused
 	 * 
-	 * @return True if this {@link Room} has no owner, false otherwise
+	 * @return True if this {@link Room} timer is paused, false otherwise
 	 * 
 	 * @since 1.0.0
 	 */
 	
 	@Default(Boolean = false)
-	public boolean isPrivate() {
-		return owner != null;
+	public boolean isPaused() {
+		return roomThread == null ? false : roomThread.isPaused();
 	}
 	
 	/**
@@ -364,9 +495,7 @@ public class Room {
 	 * @since 1.0.0
 	 */
 	
-	public void resetRoom() {
-		state = RoomState.WAITING;
-		
+	public void resetRoom() {		
 		if (event) {
 			gameType = GameType.MURDER;
 			event = false;
@@ -374,8 +503,11 @@ public class Room {
 		if (playersSet.size() >= getMinPlayersAmount()) {
 			state = RoomState.VOTING;
 		}
+		else {
+			state = RoomState.WAITING;
+		}
 		checkPreMap();
-		setRoomTimer(180);
+		setRoomTimer(Storage.getLong(ArcadeConfig.GAME_WAIT_TIME));
 	}
 	
 	/**
@@ -430,16 +562,6 @@ public class Room {
 	@Default(value = HashMap.class)
 	public Map<String, Set<UUID>> getVoteMap() {
 		return voteMap;
-	}
-	
-	@Default(value = RoomState.class)
-	public RoomState getState() {
-		return state;
-	}
-	
-	@Default(value = GameStyle.class)
-	public GameStyle getGameStyle() {
-		return gameStyle;
 	}
 	
 	public void setPreMap(@Nullable String preMap) {

@@ -59,7 +59,7 @@ public class GameWorld {
 	private final List<Location> spawnPoints;
 	
 	/**
-	 * See #get
+	 * See {@link #getGameType()}
 	 * 
 	 * @since 1.0.0
 	 */
@@ -94,7 +94,7 @@ public class GameWorld {
 		}
 		this.world = world;
 		this.spawnPoints = spawnPoints;
-		setGameType(gameType);
+		this.gameType = gameType;
 	}
 	
 	/**

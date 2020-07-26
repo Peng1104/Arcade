@@ -3,15 +3,11 @@ package net.peng1104.game.maps;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.configuration.Configuration;
 
-import net.peng1104.Arcade;
 import net.peng1104.annotation.Default;
 import net.peng1104.annotation.NotNull;
 import net.peng1104.annotation.Nullable;
@@ -55,14 +51,6 @@ public class GameMap {
 	private final GameMapFile configFile;
 	
 	/**
-	 * The {@link Set} containing all the valid {@link GameType}s for this {@link GameMap}
-	 * 
-	 * @since 1.0.0
-	 */
-	
-	private final Set<GameType> validTypes = new HashSet<>();
-	
-	/**
 	 * Create a new {@link GameMap}
 	 * 
 	 * @param name The name of this {@link GameMap}
@@ -78,18 +66,10 @@ public class GameMap {
 		if (name == null || name.isEmpty()) {
 			throw new IllegalArgumentException("Name cannot be null or empty");
 		}
-		if (source == null || !source.isDirectory()) {
-			throw new IllegalArgumentException("Source file must be a directory");
-		}
 		this.name = name;
 		this.source = source;
 		
 		configFile = new GameMapFile(name);
-		
-		for (String key : configFile.getKeys()) {
-			validTypes.add(GameType.getGameTypeByName(key));
-		}
-		validTypes.remove(null);
 	}
 	
 	/**
@@ -138,12 +118,13 @@ public class GameMap {
 	 * 
 	 * @since 1.0.0
 	 * 
-	 * @see #isValidStyle(GameStyle)
+	 * @see #isValidType(GameType)
+	 * @see GameMapFile#canBeUsed()
 	 */
 	
 	@Default(Boolean = false)
 	public boolean canBeUsed() {
-		return !validTypes.isEmpty();
+		return configFile.canBeUsed();
 	}
 	
 	/**
@@ -151,14 +132,17 @@ public class GameMap {
 	 * 
 	 * @param gameStyle The {@link GameType} to check
 	 * 
-	 * @return True if the {@link GameType} for this {@link GameMap} is valid, false otherwise
+	 * @return True if the given {@link GameType} is valid for this
+	 * {@link GameMap}
 	 * 
 	 * @since 1.0.0
+	 * 
+	 * @see GameMapFile#isValidType(GameType)
 	 */
 	
 	@Default(Boolean = false)
 	public boolean isValidType(@NotNull GameType gameType) {
-		return validTypes.contains(gameType);
+		return configFile.isValidType(gameType);
 	}
 	
 	/**
@@ -166,7 +150,7 @@ public class GameMap {
 	 * 
 	 * @return The Maintenance {@link GameWorld} of this {@link GameMap}
 	 * 
-	 * @since 6.6.7
+	 * @since 1.0.0
 	 */
 	
 	@Nullable
@@ -174,8 +158,8 @@ public class GameMap {
 		World world = WorldAPI.createWorld(getWorldSource(), getName());
 		
 		if (world != null) {
-			if (canBeUsed()) {
-				GameType type = validTypes.iterator().next();
+			if (configFile.canBeUsed()) {
+				GameType type = configFile.getValidTypes().iterator().next();
 				
 				return new GameWorld(world, configFile.getSpawnPoints(world, type), type);
 			}
@@ -225,63 +209,5 @@ public class GameMap {
 			}
 		}
 		return null;
-	}
-	
-	@Default(Boolean = false)
-	public boolean saveConfig(@NotNull GameType gameType, @Nullable GameType base) {
-		if (gameType == null) return false;
-		
-		if (base == null) {
-			
-		}
-	}
-	
-	/**
-	 * Save all the spawn points from a given {@link GameStyle} into the {@link Configuration}
-	 * {@link File}
-	 * 
-	 * @param spawnPoints The spawn points to save
-	 * @param gameStyle The {@link GameStyle} of the spawn points to save
-	 * 
-	 * @return True if there was no error during the saving of the data to the YAML file
-	 * 
-	 * @since 1.0.0
-	 */
-	
-	@Default(Boolean = false)
-	public boolean saveConfig(@NotNull GameType type, @NotNull List<Location> spawnPoints) {
-		if (type != null && spawnPoints != null) {
-			boolean result = configFile.save(type, spawnPoints);
-			
-			if (result) {
-				if (spawnPoints.isEmpty()) {
-					if (validTypes.remove(type)) {
-						for (LobbyGame game : Arcade.getInstance().getGameManager().getGames()) {
-							if (style == game.getGameStyle()) {
-								switch (game.getGameState()) {
-									case WAITING:
-									case VOTING:
-										if (style.getName().equals(game.getPreSelectedMap())) {
-											game.setPreSelectedMap(null);
-										}
-										if (game.getVoteMap().containsKey(getName())) {
-											game.getVoteMap().remove(getName());
-											game.updateVoteMap();
-										}
-										break;
-									default:
-										break;
-								}
-							}
-						}
-					}
-				}
-				else {
-					validStyles.add(style);
-				}
-			}
-			return result;
-		}
-		return false;
 	}
 }

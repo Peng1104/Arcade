@@ -15,7 +15,6 @@ import net.peng1104.annotation.Default;
 import net.peng1104.annotation.NotNull;
 import net.peng1104.annotation.Nullable;
 import net.peng1104.storage.files.FileBase;
-import net.peng1104.storage.game.enums.GameStyle;
 import net.peng1104.storage.game.files.GameMapFile;
 import net.peng1104.utils.FileUtils;
 

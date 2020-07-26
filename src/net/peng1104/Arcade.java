@@ -3,7 +3,17 @@ package net.peng1104;
 import net.peng1104.annotation.Default;
 import net.peng1104.annotation.Nullable;
 import net.peng1104.game.GameManager;
+import net.peng1104.game.RoomManager;
 import net.peng1104.game.maps.GameMapManager;
+import net.peng1104.storage.files.main.ArcadeConfigFile;
+
+/**
+ * {@link Class} to start and manage the {@link Arcade} {@link PengPlugin}
+ * 
+ * @since 1.0.0
+ * 
+ * @author Peng1104
+ */
 
 public class Arcade extends PengPlugin {
 	
@@ -14,6 +24,22 @@ public class Arcade extends PengPlugin {
 	 */
 	
 	private static Arcade instance;
+	
+	/**
+	 * The {@link ArcadeConfigFile} instance
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	private ArcadeConfigFile configFile;
+	
+	/**
+	 * The {@link RoomManager} instance
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	private RoomManager roomManager;
 	
 	/**
 	 * The {@link GameMapManager} instance
@@ -40,8 +66,16 @@ public class Arcade extends PengPlugin {
 		
 		if (!hasLicense()) return;
 		
+		configFile = new ArcadeConfigFile();
+		
+		roomManager = new RoomManager();
 		gameMapManager = new GameMapManager();
 		gameManager = new GameManager();
+	}
+	
+	@Override
+	public ArcadeConfigFile getConfiguration() {
+		return configFile;
 	}
 	
 	/**
@@ -57,10 +91,39 @@ public class Arcade extends PengPlugin {
 		return instance;
 	}
 	
+	/**
+	 * Get the {@link RoomManager} instance
+	 * 
+	 * @return The {@link RoomManager} instance
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	@Default(value = RoomManager.class)
+	public RoomManager getRoomManager() {
+		return roomManager;
+	}
+	
+	/**
+	 * Get the {@link GameMapManager} instance
+	 * 
+	 * @return The {@link GameMapManager} instance
+	 * 
+	 * @since 1.0.0
+	 */
+	
 	@Default(value = GameMapManager.class)
 	public GameMapManager getGameMapManager() {
 		return gameMapManager;
 	}
+	
+	/**
+	 * Get the {@link GameManager} instance
+	 * 
+	 * @return The {@link GameManager} instance
+	 * 
+	 * @since 1.0.0
+	 */
 	
 	@Default(value = GameManager.class)
 	public GameManager getGameManager() {
