@@ -1,6 +1,0 @@
-main: net.peng1104.Arcade
-name: Arcade
-author: Peng1104
-version: 0.0.1
-depend: [PengAPI]
-api-version: 1.13
