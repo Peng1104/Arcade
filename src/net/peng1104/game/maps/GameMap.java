@@ -3,15 +3,12 @@ package net.peng1104.game.maps;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.List;
 
-import org.bukkit.Location;
 import org.bukkit.World;
 
 import net.peng1104.annotation.Default;
 import net.peng1104.annotation.NotNull;
 import net.peng1104.annotation.Nullable;
-import net.peng1104.game.GameWorld;
 import net.peng1104.storage.game.enums.GameType;
 import net.peng1104.storage.game.files.GameMapFile;
 import net.peng1104.utils.WorldAPI;
@@ -51,13 +48,21 @@ public class GameMap {
 	private final GameMapFile configFile;
 	
 	/**
+	 * The maintance {@link GameWorld}
+	 * 
+	 * @since 1.0.0
+	 */
+	
+	private GameWorld maintanceGameWorld;
+	
+	/**
 	 * Create a new {@link GameMap}
 	 * 
 	 * @param name The name of this {@link GameMap}
 	 * @param source The source for the {@link #createWorld(GameStyle, int)}
 	 * 
 	 * @throws IllegalArgumentException If the given name is null or empty or the given source
-	 * {@link File} is not a directory
+	 * {@link File} is null
 	 * 
 	 * @since 1.0.0
 	 */
@@ -66,9 +71,11 @@ public class GameMap {
 		if (name == null || name.isEmpty()) {
 			throw new IllegalArgumentException("Name cannot be null or empty");
 		}
+		if (source == null) {
+			throw new IllegalArgumentException("Source cannot be null");
+		}
 		this.name = name;
 		this.source = source;
-		
 		configFile = new GameMapFile(name);
 	}
 	
@@ -99,91 +106,63 @@ public class GameMap {
 	}
 	
 	/**
-	 * Get the locaction of this {@link GameMapFile}
+	 * The {@link GameMapFile} of this {@link GameMap}
 	 * 
-	 * @return The {@link File} that represents the location of this {@link GameMap}
+	 * @return The {@link GameMapFile} of this {@link GameMap}
 	 * 
 	 * @since 1.0.0
 	 */
 	
-	@Default(value = File.class)
-	public File getConfigFileLocation() {
-		return new File(configFile.getFilePath());
+	@Default(value = GameMapFile.class)
+	public GameMapFile getConfigFile() {
+		return configFile;
 	}
 	
 	/**
-	 * Check if this {@link GameMap} can be used
+	 * Get the maintenance {@link GameWorld} of this {@link GameMap}
 	 * 
-	 * @return True if there is any valid {@link GameStyle}
-	 * 
-	 * @since 1.0.0
-	 * 
-	 * @see #isValidType(GameType)
-	 * @see GameMapFile#canBeUsed()
-	 */
-	
-	@Default(Boolean = false)
-	public boolean canBeUsed() {
-		return configFile.canBeUsed();
-	}
-	
-	/**
-	 * Get if a {@link GameType} is valid for this {@link GameMap}
-	 * 
-	 * @param gameStyle The {@link GameType} to check
-	 * 
-	 * @return True if the given {@link GameType} is valid for this
-	 * {@link GameMap}
-	 * 
-	 * @since 1.0.0
-	 * 
-	 * @see GameMapFile#isValidType(GameType)
-	 */
-	
-	@Default(Boolean = false)
-	public boolean isValidType(@NotNull GameType gameType) {
-		return configFile.isValidType(gameType);
-	}
-	
-	/**
-	 * {@link Method} to create the Maintenance {@link GameWorld} of this {@link GameMap}
-	 * 
-	 * @return The Maintenance {@link GameWorld} of this {@link GameMap}
+	 * @return The maintenance {@link GameWorld} of this {@link GameMap}
 	 * 
 	 * @since 1.0.0
 	 */
 	
 	@Nullable
-	public GameWorld createMaintenanceGameWorld() {
-		World world = WorldAPI.createWorld(getWorldSource(), getName());
-		
-		if (world != null) {
-			if (configFile.canBeUsed()) {
-				GameType type = configFile.getValidTypes().iterator().next();
-				
-				return new GameWorld(world, configFile.getSpawnPoints(world, type), type);
+	public GameWorld getMaintenanceGameWorld() {
+		if (maintanceGameWorld == null) {
+			World world;
+			
+			if (!source.isDirectory()) {
+				world = WorldAPI.createVoidWolrd(name);
 			}
-			return new GameWorld(world, new ArrayList<>(), GameType.MURDER);
+			else {
+				world = WorldAPI.createWorld(source, name);
+			}
+			if (world != null) {
+				if (configFile.canBeUsed()) {
+					GameType type = configFile.getValidTypes().iterator().next();
+					
+					maintanceGameWorld = new GameWorld(world,
+							configFile.getSpawnPoints(world, type), type);
+				}
+				else {
+					maintanceGameWorld = new GameWorld(world, new ArrayList<>(), GameType.MURDER);
+				}
+			}
 		}
-		return null;
+		return maintanceGameWorld;
 	}
 	
 	/**
-	 * Get the spawn points of this {@link GameMap} for a given {@link World} and {@link GameStyle}
-	 * 
-	 * @param world The {@link World} to create the spawn points for
-	 * @param gameStyle The {@link GameStyle} to get the spawn points for
-	 * 
-	 * @return A {@link List} containg all the spawn poins for the given sytle in the given
-	 * {@link World}
+	 * {@link Method} to reset the {@link #getMaintenanceGameWorld()}
 	 * 
 	 * @since 1.0.0
 	 */
 	
-	@Default(value = ArrayList.class)
-	public List<Location> getSpawnPoints(@NotNull World world, @NotNull GameType gameType) {
-		if (world == null || !isValidType(gameType)) return new ArrayList<>();
-		return configFile.getSpawnPoints(world, gameType);
+	public void resetMaintenanceGameWorld() {
+		if (maintanceGameWorld != null) {
+			maintanceGameWorld.delete();
+			maintanceGameWorld = null;
+		}
 	}
 	
 	/**
@@ -201,11 +180,11 @@ public class GameMap {
 	
 	@Nullable
 	public GameWorld createGameWorld(@NotNull GameType type, int id) {
-		if (isValidType(type) && id > 0) {
-			World world = WorldAPI.createWorld(getWorldSource(), id + '_' + getName());
+		if (configFile.isValidType(type) && id > 0) {
+			World world = WorldAPI.createWorld(getWorldSource(), id + "_" + getName());
 			
 			if (world != null) {
-				return new GameWorld(world, getSpawnPoints(world, type), type);
+				return new GameWorld(world, configFile.getSpawnPoints(world, type), type);
 			}
 		}
 		return null;

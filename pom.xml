@@ -17,7 +17,7 @@
     <dependency>
       <groupId>net.peng1104</groupId>
       <artifactId>PengAPI</artifactId>
-      <version>1.9.8</version>
+      <version>1.9.10</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

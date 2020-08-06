@@ -1,4 +1,4 @@
-package net.peng1104.game;
+package net.peng1104.game.maps;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -13,8 +13,8 @@ import org.bukkit.entity.Entity;
 
 import net.peng1104.annotation.Default;
 import net.peng1104.annotation.NotNull;
+import net.peng1104.annotation.Nullable;
 import net.peng1104.game.games.Game;
-import net.peng1104.game.maps.GameMap;
 import net.peng1104.profiles.Profile;
 import net.peng1104.storage.Storage;
 import net.peng1104.storage.enums.main.PengAPIConfig;
@@ -23,19 +23,19 @@ import net.peng1104.utils.ChatAPI;
 import net.peng1104.utils.WorldAPI;
 
 /**
-* {@link Class} to manage the operations related to the {@link World} created
-* by a {@link GameMap} for a {@link Game}
-* 
-* @author Peng1104
-* 
-* @since 1.0.0
-*/
+ * {@link Class} to manage the operations related to the {@link World} created by a {@link GameMap}
+ * for a {@link Game}
+ * 
+ * @author Peng1104
+ * 
+ * @since 1.0.0
+ */
 
 public class GameWorld {
 	
 	/**
-	 * The {@link Random} instance unsed to make {@link Random} operations in the
-	 * {@link GameWorld} {@link Class}
+	 * The {@link Random} instance unsed to make {@link Random} operations in the {@link GameWorld}
+	 * {@link Class}
 	 * 
 	 * @since 1.0.0
 	 */
@@ -70,12 +70,11 @@ public class GameWorld {
 	 * The {@link GameWorld} {@link Constructor}
 	 * 
 	 * @param world The {@link World} that the {@link GameWorld} will manage
-	 * @param spawnPoints The spawn points {@link Location}s of the
-	 * {@link GameWorld}
+	 * @param spawnPoints The spawn points {@link Location}s of the {@link GameWorld}
 	 * 
 	 * @param gameType The {@link GameType} of the {@link GameWorld}
 	 * 
-	 * @throws NullPointerException If any of the given parameters is null
+	 * @throws IllegalArgumentException If any of the given parameters is null
 	 * 
 	 * @since 1.0.0
 	 */
@@ -84,13 +83,13 @@ public class GameWorld {
 			@NotNull GameType gameType) {
 		
 		if (world == null) {
-			throw new NullPointerException("World cannot be null");
+			throw new IllegalArgumentException("World cannot be null");
 		}
 		if (spawnPoints == null) {
-			throw new NullPointerException("SpawnPoints cannot be null");
+			throw new IllegalArgumentException("SpawnPoints cannot be null");
 		}
 		if (gameType == null) {
-			throw new NullPointerException("GameType cannot be null");
+			throw new IllegalArgumentException("GameType cannot be null");
 		}
 		this.world = world;
 		this.spawnPoints = spawnPoints;
@@ -113,8 +112,8 @@ public class GameWorld {
 	/**
 	 * Get the spawn points {@link Location}s of this {@link GameWorld}
 	 * 
-	 * @return A {@link List} contaning all the spawn points {@link Location}s
-	 * of this {@link GameWorld}
+	 * @return A {@link List} contaning all the spawn points {@link Location}s of this
+	 * {@link GameWorld}
 	 * 
 	 * @since 1.0.0
 	 */
@@ -152,63 +151,63 @@ public class GameWorld {
 	}
 	
 	/**
-	 * Get a {@link Random} index {@link Location} from the
-	 * {@link #getSpawnPoints()}
+	 * Get a {@link Random} index {@link Location} from the {@link #getSpawnPoints()}
 	 * 
-	 * @return A {@link Random} index {@link Location} from the
-	 * {@link #getSpawnPoints()}
+	 * @return A {@link Random} index {@link Location} from the {@link #getSpawnPoints()}
 	 * 
 	 * @since 1.0.0
 	 */
 	
-	@Default(Int = 0)
+	@Default(Int = -1)
 	public int getRandomIndex() {
-		if (spawnPoints.isEmpty()) {
-			return 0;
-		}
-		return RANDOM.nextInt(spawnPoints.size());
+		return spawnPoints.isEmpty() ? -1 : RANDOM.nextInt(spawnPoints.size());
 	}
 	
 	/**
-	 * Internal {@link Method} to get a {@link Random} {@link Location} from
-	 * the {@link #getSpawnPoints()}
-	 * 
-	 * @return A {@link Random} {@link Location} from the
+	 * Internal {@link Method} to get a {@link Random} {@link Location} from the
 	 * {@link #getSpawnPoints()}
+	 * 
+	 * @return A {@link Random} {@link Location} from the {@link #getSpawnPoints()}, or null if the
+	 * {@link #getSpawnPoints()} is empty
 	 * 
 	 * @since 1.0.0
 	 */
 	
-	@Default(value = Location.class)
+	@Nullable
 	private Location getRandomLocation() {
-		return spawnPoints.get(RANDOM.nextInt(spawnPoints.size()));
+		int index = getRandomIndex();
+		
+		return index > -1 ? spawnPoints.get(index) : null;
 	}
 	
 	/**
-	 * Spawn an {@link Entity} of a specific {@link Class} in the
-	 * {@link #getWorld()}
+	 * Spawn an {@link Entity} of a specific {@link Class} in the {@link #getWorld()}
 	 * 
 	 * @param <T> The {@link Class} of the {@link Entity} to spawn
 	 * @param entityClass The {@link Class} of the {@link Entity} to spawn
 	 * 
-	 * @return An instance of the spawned {@link Entity}
+	 * @return An instance of the spawned {@link Entity}, or null if the {@link Entity} could not be
+	 * spawned
 	 * 
 	 * @since 1.0.0
 	 */
 	
+	@Nullable
 	public <T extends Entity> T spawn(@NotNull Class<T> entityClass) {
-		if (entityClass != null && !spawnPoints.isEmpty()) {
-			return world.spawn(getRandomLocation(), entityClass);
+		if (entityClass != null) {
+			Location location = getRandomLocation();
+			
+			if (location != null) {
+				return world.spawn(location, entityClass);
+			}
 		}
 		return null;
 	}
 	
 	/**
-	 * {@link Method} to {@link Random} teleport {@link Profile}s to the
-	 * {@link #getWorld()}
+	 * {@link Method} to {@link Random} teleport {@link Profile}s to the {@link #getWorld()}
 	 * 
-	 * @param profiles The {@link Profile}s to teleport into the
-	 * {@link #getWorld()}
+	 * @param profiles The {@link Profile}s to teleport into the {@link #getWorld()}
 	 * 
 	 * @since 1.0.0
 	 */
@@ -216,16 +215,13 @@ public class GameWorld {
 	public void randomTeleport(@NotNull Iterable<Profile> profiles) {
 		if (profiles != null && !spawnPoints.isEmpty()) {
 			for (Profile profile : profiles) {
-				if (profile != null) {
-					profile.teleport(getRandomLocation());
-				}
+				randomTeleport(profile);
 			}
 		}
 	}
 	
 	/**
-	 * {@link Method} to {@link Random} teleport a {@link Profile} 
-	 * to the {@link #getWorld()}
+	 * {@link Method} to {@link Random} teleport a {@link Profile} to the {@link #getWorld()}
 	 * 
 	 * @param profile The {@link Profile} to teleport into the {@link #getWorld()}
 	 * 
@@ -241,11 +237,9 @@ public class GameWorld {
 	/**
 	 * {@link Method} to teleport {@link Profile}s to the {@link #getWorld()}
 	 * 
-	 * @param profiles The {@link Profile}s to teleport into the
-	 * {@link #getWorld()}
+	 * @param profiles The {@link Profile}s to teleport into the {@link #getWorld()}
 	 * 
-	 * @param index The index of the spawn point to teleport the {@link Profile}
-	 * to
+	 * @param index The index of the spawn point to teleport the {@link Profile} to
 	 * 
 	 * @since 1.0.0
 	 */
@@ -266,8 +260,7 @@ public class GameWorld {
 	 * {@link Method} to teleport a {@link Profile} to the {@link #getWorld()}
 	 * 
 	 * @param profile The {@link Profile} to teleport into the {@link #getWorld()}
-	 * @param index The index of the spawn point to teleport the {@link Profile}s
-	 * to
+	 * @param index The index of the spawn point to teleport the {@link Profile}s to
 	 * 
 	 * @since 1.0.0
 	 */
@@ -295,11 +288,11 @@ public class GameWorld {
 			for (Profile profile : profiles) {
 				if (locations.isEmpty()) {
 					if (!informed) {
-						ChatAPI.sendBrocastMessage("&c[&4Arcade&c] &fO Mapa &c" +
-								getName() + " &fnão possui o suficiente de spawn points configurados para o modo &c"
-								+ getGameType() + "&f, faltam &c" + (profiles.size() - spawnPoints.size())
-								+ " &flugares."
-							, Storage.getString(PengAPIConfig.PERMISSÃO_RECEBER_AVISOS));
+						ChatAPI.sendBrocastMessage("&c[&4Arcade&c] &fO Mapa &c" + getName()
+								+ " &fnão possui o suficiente de spawn points configurados para o modo &c"
+								+ getGameType() + "&f, faltam &c"
+								+ (profiles.size() - spawnPoints.size()) + " &flugares.",
+								Storage.getString(PengAPIConfig.PERMISSÃO_RECEBER_AVISOS));
 						informed = true;
 					}
 					randomTeleport(profile);
@@ -316,8 +309,7 @@ public class GameWorld {
 	/**
 	 * Get the name of the {@link GameMap} that generated this {@link GameWorld}
 	 * 
-	 * @return The name of the {@link GameMap} that generated this
-	 * {@link GameWorld}
+	 * @return The name of the {@link GameMap} that generated this {@link GameWorld}
 	 * 
 	 * @since 1.0.0
 	 */
@@ -333,12 +325,11 @@ public class GameWorld {
 	}
 	
 	/**
-	 * {@link Method} to delete this {@link GameWorld}, this {@link Method} will
-	 * clear all the spawn points {@link Location}s and delete the {@link World}
-	 * that is been managet
+	 * {@link Method} to delete this {@link GameWorld}, this {@link Method} will clear all the spawn
+	 * points {@link Location}s and delete the {@link World} that is been managet
 	 * 
-	 * @return True if there was no erros during the deletion of this
-	 * {@link GameWorld}, false otherwise
+	 * @return True if there was no erros during the deletion of this {@link GameWorld}, false
+	 * otherwise
 	 * 
 	 * @since 1.0.0
 	 */

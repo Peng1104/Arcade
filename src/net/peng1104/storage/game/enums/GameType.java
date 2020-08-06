@@ -96,7 +96,7 @@ public enum GameType {
 	 * @since 1.0.0
 	 */
 	
-	OTIC("One In The Chamber", "OTIC"),
+	OTIC("One In The Chamber", "OITC"),
 	
 	/**
 	 * The lava floor {@link GameType}

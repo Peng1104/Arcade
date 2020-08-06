@@ -4,7 +4,7 @@ import net.peng1104.annotation.Default;
 import net.peng1104.annotation.Nullable;
 import net.peng1104.game.GameManager;
 import net.peng1104.game.RoomManager;
-import net.peng1104.game.maps.GameMapManager;
+import net.peng1104.game.maps.MapManager;
 import net.peng1104.storage.files.main.ArcadeConfigFile;
 
 /**
@@ -42,12 +42,12 @@ public class Arcade extends PengPlugin {
 	private RoomManager roomManager;
 	
 	/**
-	 * The {@link GameMapManager} instance
+	 * The {@link MapManager} instance
 	 * 
 	 * @since 1.0.0
 	 */
 	
-	private GameMapManager gameMapManager;
+	private MapManager mapManager;
 	
 	/**
 	 * The {@link GameManager} instance
@@ -68,9 +68,9 @@ public class Arcade extends PengPlugin {
 		
 		configFile = new ArcadeConfigFile();
 		
-		roomManager = new RoomManager();
-		gameMapManager = new GameMapManager();
+		mapManager = new MapManager();
 		gameManager = new GameManager();
+		roomManager = new RoomManager();
 	}
 	
 	@Override
@@ -105,16 +105,16 @@ public class Arcade extends PengPlugin {
 	}
 	
 	/**
-	 * Get the {@link GameMapManager} instance
+	 * Get the {@link MapManager} instance
 	 * 
-	 * @return The {@link GameMapManager} instance
+	 * @return The {@link MapManager} instance
 	 * 
 	 * @since 1.0.0
 	 */
 	
-	@Default(value = GameMapManager.class)
-	public GameMapManager getGameMapManager() {
-		return gameMapManager;
+	@Default(value = MapManager.class)
+	public MapManager getMapManager() {
+		return mapManager;
 	}
 	
 	/**

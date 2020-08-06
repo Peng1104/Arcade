@@ -4,7 +4,6 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +14,7 @@ import net.peng1104.annotation.Default;
 import net.peng1104.annotation.NotNull;
 import net.peng1104.annotation.Nullable;
 import net.peng1104.storage.files.FileBase;
+import net.peng1104.storage.game.enums.GameType;
 import net.peng1104.storage.game.files.GameMapFile;
 import net.peng1104.utils.FileUtils;
 
@@ -26,7 +26,7 @@ import net.peng1104.utils.FileUtils;
  * @author Peng1104
  */
 
-public class GameMapManager {
+public class MapManager {
 	
 	/**
 	 * The {@link File} representing the map source container
@@ -50,7 +50,7 @@ public class GameMapManager {
 	 * @since 1.0.0
 	 */
 	
-	public GameMapManager() {
+	public MapManager() {
 		if (!GameMapFile.getGameMapConfigContainer().isDirectory()) {
 			GameMapFile.getGameMapConfigContainer().delete();
 			GameMapFile.getGameMapConfigContainer().mkdirs();
@@ -119,7 +119,7 @@ public class GameMapManager {
 		
 		if (gameMap != null) {
 			boolean sourceDeleted = FileUtils.delete(gameMap.getWorldSource());
-			boolean configDeleted = FileUtils.delete(gameMap.getConfigFileLocation());
+			boolean configDeleted = FileUtils.delete(gameMap.getConfigFile().getFilePath());
 			
 			if (!sourceDeleted && !configDeleted) {
 				avalibleMaps.put(name, gameMap);
@@ -172,8 +172,7 @@ public class GameMapManager {
 	@Default(value = ArrayList.class)
 	public List<String> getAvalibleMaps() {
 		List<String> result = new ArrayList<>(avalibleMaps.keySet());
-		
-		Collections.sort(result);
+		result.sort(null);
 		return result;
 	}
 	
@@ -189,11 +188,11 @@ public class GameMapManager {
 	 */
 	
 	@Default(value = ArrayList.class)
-	public List<String> getAvalibleMaps(@NotNull GameStyle style) {
+	public List<String> getAvalibleMaps(@NotNull GameType type) {
 		Set<String> options = new HashSet<>();
 		
 		for (GameMap gameMap : avalibleMaps.values()) {
-			if (gameMap.isValidStyle(style)) {
+			if (gameMap.getConfigFile().isValidType(type)) {
 				options.add(gameMap.getName());
 			}
 		}
